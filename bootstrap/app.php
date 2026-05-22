@@ -43,6 +43,20 @@ $app->singleton(
 
 /*
 |--------------------------------------------------------------------------
+| Configure Middleware
+|--------------------------------------------------------------------------
+|
+| Here we will configure the middleware for the application. This includes
+| global middleware that runs on every request, as well as middleware
+| groups and aliases for named middleware.
+|
+*/
+
+$app->make(Illuminate\Contracts\Http\Kernel::class)
+    ->pushMiddleware(App\Http\Middleware\DisableTimeout::class);
+
+/*
+|--------------------------------------------------------------------------
 | Return The Application
 |--------------------------------------------------------------------------
 |

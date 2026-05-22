@@ -1,0 +1,248 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@config 'tailwind.config.js';
+
+/* ============================================
+   FYN BRIDALS DASHBOARD THEME
+   Matching Flutter App Colors
+   Primary: #570013 (Flutter primary)
+   Primary Container: #800020
+   Secondary: #7B5800
+   Background: #FBF9F5
+   ============================================ */
+
+/* Dashboard Background - Matches Flutter scaffoldBackgroundColor */
+.fi-main {
+    background-color: #FBF9F5;
+}
+
+/* Sidebar Customization */
+.fi-sidebar-nav {
+    background: linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 100%);
+}
+
+.fi-sidebar-nav .fi-sidebar-item {
+    margin: 4px 12px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+/* Active sidebar item - Matches Flutter primary (#570013) */
+.fi-sidebar-nav .fi-sidebar-item-active {
+    background: linear-gradient(90deg, #570013 0%, #800020 100%);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(87, 0, 19, 0.3);
+}
+
+.fi-sidebar-nav .fi-sidebar-item-icon {
+    color: #7B5800;
+}
+
+.fi-sidebar-nav .fi-sidebar-item-active .fi-sidebar-item-icon {
+    color: white;
+}
+
+.fi-sidebar-nav .fi-sidebar-item-label {
+    color: #c4c4c4;
+    font-weight: 500;
+}
+
+.fi-sidebar-nav .fi-sidebar-item-active .fi-sidebar-item-label {
+    color: white;
+}
+
+/* Top Bar Customization - Matches Flutter primary container (#800020) */
+.fi-topbar {
+    background: linear-gradient(90deg, #570013 0%, #800020 50%, #570013 100%);
+    border-bottom: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.fi-topbar .fi-logo {
+    color: white;
+}
+
+/* Cards Customization - Matches Flutter surface (#FBF9F5) */
+.fi-card {
+    background-color: #FBF9F5;
+    border-radius: 20px;
+    border: none;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(87, 0, 19, 0.15);
+}
+
+/* Stats Widgets - Matches Flutter primary container (#800020) */
+.fi-stats-widget {
+    background: linear-gradient(135deg, #570013 0%, #800020 100%);
+    border-radius: 20px;
+    padding: 20px;
+}
+
+.fi-stats-widget .fi-stats-widget-title {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+
+.fi-stats-widget .fi-stats-widget-value {
+    color: #FFD700;
+    font-size: 32px;
+    font-weight: bold;
+}
+
+.fi-stats-widget .fi-stats-widget-description {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Table Styling */
+.fi-ta {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.fi-ta-header {
+    background: linear-gradient(90deg, #570013 0%, #800020 100%);
+}
+
+.fi-ta-header th {
+    color: white !important;
+    font-weight: 600;
+}
+
+.fi-ta-row:hover {
+    background-color: #F5F3EF;
+}
+
+/* Buttons - Matches Flutter primary (#570013) */
+.fi-btn-primary {
+    background: linear-gradient(90deg, #570013 0%, #800020 100%);
+    border: none;
+    border-radius: 10px;
+    padding: 8px 20px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.fi-btn-primary:hover {
+    background: linear-gradient(90deg, #800020 0%, #a03040 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(87, 0, 19, 0.3);
+}
+
+/* Secondary Buttons - Matches Flutter secondary (#7B5800) */
+.fi-btn-secondary {
+    background-color: #7B5800 !important;
+    border: none !important;
+}
+
+.fi-btn-secondary:hover {
+    background-color: #9a7000 !important;
+}
+
+/* Modal Styling */
+.fi-modal-window {
+    border-radius: 24px;
+    background-color: #FBF9F5;
+}
+
+.fi-modal-header {
+    background: linear-gradient(90deg, #570013 0%, #800020 100%);
+    border-radius: 24px 24px 0 0;
+}
+
+.fi-modal-header .fi-modal-title {
+    color: white;
+}
+
+/* Badge Colors */
+.fi-badge-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.fi-badge-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.fi-badge-warning {
+    background-color: #7B5800;
+    color: white;
+}
+
+.fi-badge-info {
+    background-color: #800020;
+    color: white;
+}
+
+/* Pagination */
+.fi-pagination-item-active {
+    background: linear-gradient(90deg, #570013 0%, #800020 100%);
+    color: white;
+    border-radius: 8px;
+}
+
+/* Loading Spinner */
+.fi-loading-indicator {
+    color: #570013;
+}
+
+/* User Menu */
+.fi-user-menu {
+    color: white;
+}
+
+/* Links */
+a {
+    color: #570013;
+}
+
+a:hover {
+    color: #800020;
+}
+
+/* Typography - Matches Flutter font (Manrope) */
+body, .fi-body {
+    font-family: 'Manrope', sans-serif;
+}
+
+/* Headings - Matches Flutter Noto Serif */
+h1, h2, h3, .fi-heading {
+    font-family: 'Noto Serif', serif;
+}
+
+/* Fyn Bridals Brand Text */
+.fyn-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.fyn-brand-text {
+    font-family: 'Noto Serif', serif;
+    font-size: 18px;
+    font-weight: bold;
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Custom Welcome Message */
+.welcome-card {
+    background: linear-gradient(135deg, #570013 0%, #800020 100%);
+    border-radius: 20px;
+    padding: 24px;
+    color: white;
+}
+
+.welcome-card h2 {
+    color: #FFD700;
+    font-family: 'Noto Serif', serif;
+}

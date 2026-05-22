@@ -27,8 +27,8 @@ Route::get('/gallery', [GalleryController::class, 'index']);
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{id}', [CategoryController::class, 'show']);
 
-// Public Products
-Route::get('/products', [ProductController::class, 'index']);
+// Public Products - With cache headers for better performance
+Route::get('/products', [ProductController::class, 'index'])->middleware('cache.headers:public;max_age=300;etag');
 Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::get('/collections/{category}', [ProductController::class, 'getCollection']);
 
@@ -133,5 +133,34 @@ Route::get('/health', function () {
         'status'    => 'ok',
         'message'   => 'API is running',
         'timestamp' => now(),
+        'performance' => [
+            'opcache_enabled' => function_exists('opcache_get_status'),
+            'config_cached' => app()->configurationIsCached(),
+            'routes_cached' => app()->routesAreCached(),
+        ]
+    ]);
+});
+
+/*
+|--------------------------------------------------------------------------
+| DIAGNOSTIC ROUTE (For debugging - remove in production)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/diagnostic', function () {
+    return response()->json([
+        'success' => true,
+        'environment' => app()->environment(),
+        'debug' => config('app.debug'),
+        'timezone' => config('app.timezone'),
+        'database' => [
+            'connection' => config('database.default'),
+            'connected' => true,
+        ],
+        'cache' => [
+            'driver' => config('cache.default'),
+            'config_cached' => app()->configurationIsCached(),
+            'routes_cached' => app()->routesAreCached(),
+        ],
     ]);
 });

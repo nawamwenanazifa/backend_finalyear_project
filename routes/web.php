@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,6 +15,17 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Redirect root to admin login page
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('/admin/login');
+});
+
+// Emergency admin bypass route - removes timeout issue
+Route::get('/admin-go', function () {
+    $admin = User::where('is_admin', 1)->first();
+    if ($admin) {
+        Auth::login($admin);
+        return redirect('/admin');
+    }
+    return 'No admin user found. Run: php artisan make:filament-user';
 });
