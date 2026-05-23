@@ -5,17 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class BookingController extends Controller
 {
     /**
-     * @OA\Get(
-     *     path="/api/bookings",
-     *     summary="Get all bookings for the authenticated bride",
-     *     tags={"Bookings"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Response(response=200, description="List of bookings")
-     * )
+     * Get all bookings for the authenticated user
      */
     public function index()
     {
@@ -24,16 +20,14 @@ class BookingController extends Controller
             ->get()
             ->map(function ($b) {
                 return [
-                    'id'            => $b->booking_reference,
-                    'status'        => $b->status,
-                    'service'       => $b->service,
-                    'product_name'  => $b->product_name,
-                    'customer_name' => $b->customer_name,
-                    'phone'         => $b->phone,
-                    'email'         => $b->email,
-                    'booking_date'  => $b->booking_date?->format('Y-m-d H:i:s'),
-                    'address'       => $b->address,
-                    'notes'         => $b->notes,
+                    'id'                => $b->id,
+                    'booking_reference' => $b->booking_reference ?? '#BK-' . $b->id,
+                    'status'            => $b->status,
+                    'service_type'      => $b->service_type,
+                    'booking_date'      => $b->booking_date?->format('Y-m-d H:i:s'),
+                    'phone'             => $b->phone,
+                    'email'             => $b->email,
+                    'notes'             => $b->notes,
                 ];
             });
 
@@ -44,94 +38,99 @@ class BookingController extends Controller
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/bookings",
-     *     summary="Schedule a new fitting or consultation",
-     *     tags={"Bookings"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"service","booking_date","customer_name","phone"},
-     *             @OA\Property(property="service", type="string", example="Bespoke Consultation"),
-     *             @OA\Property(property="booking_date", type="string", format="date-time", example="2024-10-12 14:00:00"),
-     *             @OA\Property(property="customer_name", type="string", example="Genevieve Rose"),
-     *             @OA\Property(property="phone", type="string", example="+256700000000")
-     *         )
-     *     ),
-     *     @OA\Response(response=201, description="Booking created")
-     * )
+     * Store a new booking
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'customer_name' => 'required|string|max:255',
-            'phone'         => 'required|string|max:20',
-            'email'         => 'nullable|email',
-            'service'       => 'required|string',
-            'booking_date'  => 'required|string',
-            'address'       => 'nullable|string',
-            'notes'         => 'nullable|string',
-            'product_name'  => 'nullable|string',
-        ]);
+        try {
+            Log::info('📅 Booking request received:', $request->all());
 
-        $booking = Booking::create([
-            'user_id'       => auth()->id(),
-            'customer_name' => $request->customer_name,
-            'phone'         => $request->phone,
-            'email'         => $request->email,
-            'service'       => $request->service,
-            'booking_date'  => $request->booking_date,
-            'address'       => $request->address,
-            'notes'         => $request->notes,
-            'product_name'  => $request->product_name,
-            'status'        => 'upcoming',
-        ]);
+            $validated = $request->validate([
+                'phone'         => 'required|string|max:20',
+                'email'         => 'required|email',
+                'service_type'  => 'required|string',
+                'booking_date'  => 'required|string',
+                'notes'         => 'nullable|string',
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Booking created successfully',
-            'data'    => [
-                'id' => $booking->booking_reference,
-            ],
-        ], 201);
+            Log::info('✅ Validation passed');
+
+            $booking = Booking::create([
+                'user_id'       => Auth::id(),
+                'phone'         => $validated['phone'],
+                'email'         => $validated['email'],
+                'service_type'  => $validated['service_type'],
+                'booking_date'  => $validated['booking_date'],
+                'notes'         => $validated['notes'] ?? null,
+                'status'        => 'upcoming',
+            ]);
+
+            Log::info('✅ Booking created successfully', ['booking_id' => $booking->id]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Booking created successfully',
+                'data'    => [
+                    'id'                => $booking->id,
+                    'booking_reference' => $booking->booking_reference ?? '#BK-' . $booking->id,
+                    'service_type'      => $booking->service_type,
+                    'booking_date'      => $booking->booking_date,
+                    'phone'             => $booking->phone,
+                    'email'             => $booking->email,
+                    'notes'             => $booking->notes,
+                    'status'            => $booking->status,
+                ],
+            ], 201);
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('❌ Validation failed:', $e->errors());
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('❌ Booking creation failed: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking failed: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
-     * @OA\Get(
-     *     path="/api/bookings/{id}",
-     *     summary="Get details of a specific booking",
-     *     tags={"Bookings"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="string")),
-     *     @OA\Response(response=200, description="Booking details")
-     * )
+     * Get details of a specific booking
      */
     public function show($id)
     {
-        $booking = Booking::where('booking_reference', $id)
+        $booking = Booking::where('id', $id)
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
         return response()->json([
             'success' => true,
-            'data'    => $booking,
+            'data'    => [
+                'id'                => $booking->id,
+                'booking_reference' => $booking->booking_reference ?? '#BK-' . $booking->id,
+                'status'            => $booking->status,
+                'service_type'      => $booking->service_type,
+                'booking_date'      => $booking->booking_date?->format('Y-m-d H:i:s'),
+                'phone'             => $booking->phone,
+                'email'             => $booking->email,
+                'notes'             => $booking->notes,
+                'created_at'        => $booking->created_at?->format('Y-m-d H:i:s'),
+            ],
         ]);
     }
 
     /**
-     * @OA\Put(
-     *     path="/api/bookings/{id}/cancel",
-     *     summary="Cancel an upcoming booking",
-     *     tags={"Bookings"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="string")),
-     *     @OA\Response(response=200, description="Booking cancelled")
-     * )
+     * Cancel an upcoming booking
      */
     public function cancel($id)
     {
-        $booking = Booking::where('booking_reference', $id)
+        $booking = Booking::where('id', $id)
             ->where('user_id', auth()->id())
             ->firstOrFail();
 

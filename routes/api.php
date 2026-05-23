@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\MessageController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\CartController;
 
 /*
 |--------------------------------------------------------------------------
@@ -51,6 +53,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/bookings/{id}', [BookingController::class, 'show']);
     Route::post('/bookings', [BookingController::class, 'store']);
     Route::put('/bookings/{id}/cancel', [BookingController::class, 'cancel']);
+
+    // ==================== ORDERS ROUTES ====================
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/orders/{id}', [OrderController::class, 'show']);
+    Route::post('/orders', [OrderController::class, 'store']);
+    Route::put('/orders/{id}/cancel', [OrderController::class, 'cancel']);
+
+    // ==================== CART ROUTES ====================
+    Route::prefix('cart')->group(function () {
+        Route::get('/', [CartController::class, 'index']);
+        Route::post('/add', [CartController::class, 'addItem']);
+        Route::put('/item/{itemId}', [CartController::class, 'updateItem']);
+        Route::delete('/item/{itemId}', [CartController::class, 'removeItem']);
+        Route::delete('/clear', [CartController::class, 'clear']);
+        Route::post('/checkout', [CartController::class, 'checkout']);
+    });
 
     // ==================== MESSAGES / CHAT ROUTES ====================
     Route::prefix('messages')->group(function () {

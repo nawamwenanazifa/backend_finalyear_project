@@ -17,13 +17,25 @@ class Booking extends Model
         'status',
         'phone',
         'email',
-        'additional_info',
-        'special_requests',
+        'notes',
+        'booking_reference',
     ];
     
     protected $casts = [
         'booking_date' => 'datetime',
     ];
+
+    // Auto-generate booking reference on creation
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::creating(function ($booking) {
+            if (empty($booking->booking_reference)) {
+                $booking->booking_reference = 'BK-' . strtoupper(uniqid());
+            }
+        });
+    }
 
     public function user()
     {
@@ -43,5 +55,11 @@ class Booking extends Model
     public function getIsCancellableAttribute()
     {
         return $this->booking_date > now() && $this->status !== 'cancelled';
+    }
+    
+    // Accessor for booking reference (fallback if null)
+    public function getBookingReferenceAttribute($value)
+    {
+        return $value ?? '#BK-' . $this->id;
     }
 }
