@@ -38,4 +38,14 @@ class Conversation extends Model
     {
         return $this->user_one_id == $userId ? $this->userTwo : $this->userOne;
     }
+
+    public function hasParticipant($userId)
+    {
+        return $this->user_one_id == $userId || $this->user_two_id == $userId;
+    }
+
+    public function getLastMessageAttribute()
+    {
+        return $this->messages()->latest()->first();
+    }
 }

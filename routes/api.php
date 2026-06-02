@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\LoadingStatusController;  // ADD THIS LINE
 
 /*
 |--------------------------------------------------------------------------
@@ -20,6 +21,7 @@ use App\Http\Controllers\Api\CartController;
 // Authentication
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/resend-verification-code', [AuthController::class, 'resendVerificationCode']);
 
 // Public Gallery
@@ -33,6 +35,14 @@ Route::get('/categories/{id}', [CategoryController::class, 'show']);
 Route::get('/products', [ProductController::class, 'index'])->middleware('cache.headers:public;max_age=300;etag');
 Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::get('/collections/{category}', [ProductController::class, 'getCollection']);
+
+// ==================== LOADING STATUS ROUTES (ADD THIS SECTION) ====================
+// These routes are public so Flutter can check progress without authentication
+Route::prefix('loading')->group(function () {
+    Route::post('/start', [LoadingStatusController::class, 'startOperation']);
+    Route::get('/status/{operationId}', [LoadingStatusController::class, 'getStatus']);
+    Route::post('/simulate', [LoadingStatusController::class, 'simulateLongOperation']);
+});
 
 /*
 |--------------------------------------------------------------------------

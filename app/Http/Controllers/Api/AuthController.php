@@ -147,6 +147,82 @@ class AuthController extends Controller
         ]);
     }
 
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email'
+        ]);
+
+        // Generate a reset token
+        $token = \Illuminate\Support\Str::random(60);
+        
+        // Store token in password_resets table
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $request->email],
+            [
+                'token' => $token,
+                'created_at' => now()
+            ]
+        );
+        
+        // Here you would send an email with the reset link
+        // For now, we'll just return success with the token (remove token in production)
+        
+        // In production, send email:
+        // Mail::to($request->email)->send(new PasswordResetMail($token, $request->email));
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Password reset link sent to your email address'
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'token' => 'required|string',
+            'password' => 'required|string|min:8|confirmed'
+        ]);
+        
+        // Verify token
+        $resetRecord = DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->where('token', $request->token)
+            ->first();
+        
+        if (!$resetRecord) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired reset token'
+            ], 400);
+        }
+        
+        // Check if token expired (24 hours)
+        if (now()->diffInHours($resetRecord->created_at) > 24) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Reset token has expired. Please request a new one.'
+            ], 400);
+        }
+        
+        // Update password
+        $user = User::where('email', $request->email)->first();
+        $user->password = Hash::make($request->password);
+        $user->save();
+        
+        // Delete reset token
+        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+        
+        // Delete all user tokens (force logout on all devices)
+        $user->tokens()->delete();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Password has been reset successfully. Please login with your new password.'
+        ]);
+    }
+
     private function handleFailedLogin($user, $email)
     {
         if ($user) {

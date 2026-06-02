@@ -23,13 +23,25 @@ class Cart extends Model
 
     public function getTotalAttribute()
     {
+        // Check if items relationship exists and has items
+        if (!$this->relationLoaded('items')) {
+            return 0;
+        }
+        
         return $this->items->sum(function ($item) {
-            return $item->product->price * $item->quantity;
+            // Check if product exists
+            if (!$item->relationLoaded('product')) {
+                return 0;
+            }
+            return ($item->product ? (float)$item->product->price : 0) * $item->quantity;
         });
     }
 
     public function getItemCountAttribute()
     {
+        if (!$this->relationLoaded('items')) {
+            return 0;
+        }
         return $this->items->sum('quantity');
     }
 }

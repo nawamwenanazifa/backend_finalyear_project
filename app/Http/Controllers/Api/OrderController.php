@@ -17,6 +17,7 @@ class OrderController extends Controller
     public function index()
     {
         $orders = Order::where('user_id', Auth::id())
+            ->withCount('items')  // Add items count to each order
             ->with('items.product')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -31,6 +32,7 @@ class OrderController extends Controller
     public function show($id)
     {
         $order = Order::where('user_id', Auth::id())
+            ->withCount('items')  // Add items count
             ->with('items.product')
             ->findOrFail($id);
         
@@ -43,54 +45,64 @@ class OrderController extends Controller
     // Create order from booking
     public function store(Request $request)
     {
-        $request->validate([
-            'booking_id'      => 'required|exists:bookings,id',
-            'payment_method'  => 'required|in:cash_on_delivery,mobile_money,bank_transfer',
-            'shipping_address'=> 'required|string',
-            'total_amount'    => 'nullable|numeric',
-            'notes'           => 'nullable|string',
-        ]);
-
-        // FIXED: removed ->with('items') — Booking has no items relationship
-        $booking = Booking::where('user_id', Auth::id())
-            ->findOrFail($request->booking_id);
-
-        DB::beginTransaction();
-
         try {
-            // Service-only booking — use amount passed from app or default
-            $subtotal    = $request->total_amount ?? 150000;
-            $tax         = 0;
-            $deliveryFee = 0;
-            $total       = $subtotal + $tax + $deliveryFee;
+            \Log::info('Order creation request:', $request->all());
 
-            // Create order
-            $order = Order::create([
-                'user_id'          => Auth::id(),
-                'booking_id'       => $booking->id,
-                'order_number'     => Order::generateOrderNumber(),
-                'subtotal'         => $subtotal,
-                'tax'              => $tax,
-                'delivery_fee'     => $deliveryFee,
-                'total'            => $total,
-                'payment_method'   => $request->payment_method,
-                'payment_status'   => 'pending',
-                'order_status'     => 'pending',
-                'shipping_address' => $request->shipping_address,
-                'notes'            => $request->notes,
+            $request->validate([
+                'booking_id'      => 'required|exists:bookings,id',
+                'payment_method'  => 'required|in:cash_on_delivery,mobile_money,bank_transfer',
+                'shipping_address'=> 'required|string',
+                'total_amount'    => 'nullable|numeric',
+                'notes'           => 'nullable|string',
             ]);
 
-            DB::commit();
+            $booking = Booking::where('user_id', Auth::id())
+                ->findOrFail($request->booking_id);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Order created successfully',
-                'order'   => $order
-            ], 201);
+            DB::beginTransaction();
+
+            try {
+                // Service-only booking — use amount passed from app or default
+                $subtotal    = $request->total_amount ?? 150000;
+                $tax         = 0;
+                $deliveryFee = 0;
+                $total       = $subtotal + $tax + $deliveryFee;
+
+                // Create order
+                $order = Order::create([
+                    'user_id'          => Auth::id(),
+                    'booking_id'       => $booking->id,
+                    'order_number'     => Order::generateOrderNumber(),
+                    'subtotal'         => $subtotal,
+                    'tax'              => $tax,
+                    'delivery_fee'     => $deliveryFee,
+                    'total'            => $total,
+                    'payment_method'   => $request->payment_method,
+                    'payment_status'   => 'pending',
+                    'order_status'     => 'pending',
+                    'shipping_address' => $request->shipping_address,
+                    'notes'            => $request->notes,
+                ]);
+
+                DB::commit();
+
+                \Log::info('Order created successfully:', ['order_id' => $order->id]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Order created successfully',
+                    'order'   => $order
+                ], 201);
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
 
         } catch (\Exception $e) {
-            DB::rollBack();
-
+            \Log::error('Order creation failed: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create order: ' . $e->getMessage()

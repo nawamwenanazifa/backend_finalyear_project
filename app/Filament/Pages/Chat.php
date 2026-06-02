@@ -13,6 +13,8 @@ class Chat extends Page
     protected static ?string $navigationLabel = 'Messages';
     protected static ?string $title = 'Customer Messages';
     protected static ?string $slug = 'chat';
+    protected static ?string $navigationGroup = 'Dashboard';
+    protected static ?int $navigationSort = 2;
     
     protected static string $view = 'filament.pages.chat';
     
@@ -20,6 +22,28 @@ class Chat extends Page
     public $selectedConversation;
     public $messages = [];
     public $newMessage = '';
+    
+    // Show unread message count badge
+    public static function getNavigationBadge(): ?string
+    {
+        $unreadCount = \App\Models\Message::where('receiver_id', auth()->id())
+            ->where('is_read', false)
+            ->count();
+        
+        return $unreadCount > 0 ? $unreadCount : null;
+    }
+    
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'danger';
+    }
+    
+    protected function getListeners(): array
+    {
+        return [
+            'refreshMessages' => 'refreshMessages',
+        ];
+    }
     
     public function mount()
     {
@@ -46,6 +70,9 @@ class Chat extends Page
         Message::where('conversation_id', $conversationId)
             ->where('receiver_id', Auth::id())
             ->update(['is_read' => true]);
+            
+        // Refresh the badge count
+        $this->dispatch('refresh-navigation-badge');
     }
     
     public function sendMessage()
@@ -66,6 +93,9 @@ class Chat extends Page
         
         // Broadcast via Reverb
         broadcast(new \App\Events\MessageSent($message))->toOthers();
+        
+        // Refresh messages after sending
+        $this->refreshMessages();
     }
     
     private function getOtherUserId()
@@ -76,17 +106,12 @@ class Chat extends Page
         return $this->selectedConversation->user_one_id;
     }
     
-    public function getListeners()
+    public function refreshMessages()
     {
-        return [
-            'echo:private-conversation.{selectedConversation.id},App\\Events\\MessageSent' => 'refreshMessages'
-        ];
-    }
-    
-    public function refreshMessages($event)
-    {
-        $this->messages = Message::where('conversation_id', $this->selectedConversation->id)
-            ->orderBy('created_at', 'asc')
-            ->get();
+        if ($this->selectedConversation) {
+            $this->messages = Message::where('conversation_id', $this->selectedConversation->id)
+                ->orderBy('created_at', 'asc')
+                ->get();
+        }
     }
 }
