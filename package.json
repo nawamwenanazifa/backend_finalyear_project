@@ -2,7 +2,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "dev": "vite",
+        "dev": "lcp --proxyUrl http://localhost:8000 --port 8010",
         "build": "vite build"
     },
     "devDependencies": {

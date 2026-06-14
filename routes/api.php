@@ -10,7 +10,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\CartController;
-use App\Http\Controllers\Api\LoadingStatusController;  // ADD THIS LINE
+use App\Http\Controllers\Api\LoadingStatusController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,6 +24,10 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/resend-verification-code', [AuthController::class, 'resendVerificationCode']);
 
+// ==================== OTP / 2FA ROUTES (Public for verification) ====================
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
+
 // Public Gallery
 Route::get('/gallery', [GalleryController::class, 'index']);
 
@@ -36,7 +40,7 @@ Route::get('/products', [ProductController::class, 'index'])->middleware('cache.
 Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::get('/collections/{category}', [ProductController::class, 'getCollection']);
 
-// ==================== LOADING STATUS ROUTES (ADD THIS SECTION) ====================
+// ==================== LOADING STATUS ROUTES ====================
 // These routes are public so Flutter can check progress without authentication
 Route::prefix('loading')->group(function () {
     Route::post('/start', [LoadingStatusController::class, 'startOperation']);
@@ -57,6 +61,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/user/profile', [AuthController::class, 'updateProfile']);
     Route::post('/user/upload-image', [AuthController::class, 'uploadImage']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    
+    // ==================== 2FA / SECURITY ROUTES (Protected) ====================
+    Route::post('/toggle-2fa', [AuthController::class, 'toggleTwoFactor']);
 
     // ==================== BOOKINGS ROUTES ====================
     Route::get('/bookings', [BookingController::class, 'index']);

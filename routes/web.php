@@ -3,6 +3,7 @@
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Middleware\StorageCors;
 
 // Redirect login to Filament login
 Route::get('/login', function () {
@@ -38,3 +39,12 @@ Route::middleware(['web', 'auth'])->get('/admin/api/quick-counts', function () {
         'pending_messages' => \App\Models\Message::where('is_read', false)->count(),
     ]);
 });
+
+// Serve storage files with CORS headers so Flutter Web (browser) can load images
+Route::get('/storage/{path}', function ($path) {
+    $fullPath = storage_path('app/public/' . $path);
+    if (!file_exists($fullPath)) {
+        abort(404);
+    }
+    return response()->file($fullPath);
+})->where('path', '.*')->middleware(StorageCors::class);

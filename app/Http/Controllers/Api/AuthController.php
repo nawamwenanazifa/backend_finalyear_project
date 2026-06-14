@@ -9,11 +9,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Services\OtpService;
 
 class AuthController extends Controller
 {
     private const MAX_FAILED_ATTEMPTS = 3;
     private const LOCKOUT_MINUTES = 15;
+    
+    protected $otpService;
+
+    public function __construct(OtpService $otpService)
+    {
+        $this->otpService = $otpService;
+    }
 
     public function register(Request $request)
     {
@@ -31,6 +39,7 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
             'is_admin' => false,
             'gender' => 'female',
+            'two_factor_enabled' => true,
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -84,7 +93,7 @@ class AuthController extends Controller
             ], 401);
         }
         
-        // Reset failed attempts on successful login
+        // Reset failed attempts on successful password verification
         $user->update([
             'failed_login_attempts' => 0,
             'locked_until' => null,
@@ -92,7 +101,22 @@ class AuthController extends Controller
         
         $this->recordLoginAttempt($request->email, $request->ip(), true);
         
-        // Successful login - generate token
+        // Check if 2FA is enabled for this user
+        if ($user->two_factor_enabled) {
+            // Generate and send OTP
+            $otpCode = $this->otpService->generateOtp($user);
+            $this->otpService->sendOtpViaEmail($user, $otpCode);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'OTP sent to your email',
+                'requires_otp' => true,
+                'user_id' => $user->id,
+                'email' => $user->email,
+            ]);
+        }
+        
+        // If 2FA is disabled, login directly
         $user->tokens()->delete();
         $token = $user->createToken('auth_token')->plainTextToken;
         
@@ -114,6 +138,88 @@ class AuthController extends Controller
                 'navigation' => $navigation,
                 'redirect_to' => '/home',
             ]
+        ]);
+    }
+    
+    /**
+     * Verify OTP for Two-Factor Authentication
+     */
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'otp' => 'required|string|size:6',
+        ]);
+        
+        $user = User::find($request->user_id);
+        
+        if (!$this->otpService->verifyOtp($user, $request->otp)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired OTP code'
+            ], 422);
+        }
+        
+        // Generate token after successful OTP verification
+        $user->tokens()->delete();
+        $token = $user->createToken('auth_token')->plainTextToken;
+        
+        $navigation = $this->safeNavigation($user);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Login successful',
+            'data' => [
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'gender' => $user->gender,
+                    'is_admin' => $user->is_admin ?? false,
+                ],
+                'token' => $token,
+                'navigation' => $navigation,
+                'redirect_to' => '/home',
+            ]
+        ]);
+    }
+    
+    /**
+     * Resend OTP code
+     */
+    public function resendOtp(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+        
+        $user = User::find($request->user_id);
+        $this->otpService->resendOtp($user);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'New OTP sent to your email'
+        ]);
+    }
+    
+    /**
+     * Toggle Two-Factor Authentication for user
+     */
+    public function toggleTwoFactor(Request $request)
+    {
+        $user = $request->user();
+        
+        $user->update([
+            'two_factor_enabled' => !$user->two_factor_enabled
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => $user->two_factor_enabled 
+                ? 'Two-factor authentication enabled' 
+                : 'Two-factor authentication disabled',
+            'two_factor_enabled' => $user->two_factor_enabled
         ]);
     }
 
@@ -141,6 +247,7 @@ class AuthController extends Controller
                     'phone' => $user->phone,
                     'gender' => $user->gender,
                     'is_admin' => $user->is_admin ?? false,
+                    'two_factor_enabled' => $user->two_factor_enabled ?? true,
                 ],
                 'navigation' => $navigation,
             ]
@@ -307,6 +414,7 @@ class AuthController extends Controller
             ['title' => 'My Bookings', 'route' => '/my-bookings', 'icon' => 'list', 'section' => 'bookings'],
             ['title' => 'Messages', 'route' => '/conversations', 'icon' => 'chat', 'section' => 'messages'],
             ['title' => 'Settings', 'route' => '/settings', 'icon' => 'settings', 'section' => 'settings'],
+            ['title' => 'Two-Factor Auth', 'route' => '/2fa', 'icon' => 'security', 'section' => 'security'],
             ['title' => 'Logout', 'route' => '/logout', 'icon' => 'logout', 'action' => 'logout', 'section' => 'auth'],
         ];
 
