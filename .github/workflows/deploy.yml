@@ -41,16 +41,50 @@ jobs:
         run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
       # ─────────────────────────────────────────────────────
-      # 4. Create a starter .env (placeholder — edit on cPanel
-      #    via File Manager after first deploy)
-      #    On subsequent deploys the server's .env is preserved.
+      # 4. Create production .env with real APP_KEY
+      #    First deploy: this .env is used as-is
+      #    Later deploys: the server's .env is preserved
+      #    (see backup/restore in SSH step below)
+      #
+      #    After first deploy, edit DB & MAIL values via:
+      #    cPanel → File Manager → /home3/fynbridals/backend/.env
       # ─────────────────────────────────────────────────────
-      - name: Create starter .env from example
+      - name: Create production .env
         run: |
-          cp .env.example .env
-          sed -i 's/APP_ENV=local/APP_ENV=production/'           .env
-          sed -i 's/APP_DEBUG=true/APP_DEBUG=false/'             .env
-          sed -i 's|APP_URL=http://localhost|APP_URL=https://admin.fynbridals.com|' .env
+          cat > .env << 'ENVFILE'
+          APP_NAME="FynBridals Backend"
+          APP_ENV=production
+          APP_KEY=base64:Xm8dPlbLZC4b+t1u1xH5bWz9LhwV6WFp0nYjubY5uW4=
+          APP_DEBUG=false
+          APP_URL=https://admin.fynbridals.com
+
+          LOG_CHANNEL=stack
+          LOG_DEPRECATIONS_CHANNEL=null
+          LOG_LEVEL=error
+
+          DB_CONNECTION=mysql
+          DB_HOST=localhost
+          DB_PORT=3306
+          DB_DATABASE=fynbridals_CHANGE_ME
+          DB_USERNAME=fynbridals_CHANGE_ME
+          DB_PASSWORD=CHANGE_ME
+
+          BROADCAST_DRIVER=log
+          CACHE_DRIVER=file
+          FILESYSTEM_DISK=local
+          QUEUE_CONNECTION=sync
+          SESSION_DRIVER=file
+          SESSION_LIFETIME=120
+
+          MAIL_MAILER=smtp
+          MAIL_HOST=mail.fynbridals.com
+          MAIL_PORT=465
+          MAIL_USERNAME=CHANGE_ME
+          MAIL_PASSWORD=CHANGE_ME
+          MAIL_ENCRYPTION=ssl
+          MAIL_FROM_ADDRESS="noreply@fynbridals.com"
+          MAIL_FROM_NAME="FynBridals"
+          ENVFILE
 
       # ─────────────────────────────────────────────────────
       # 5. Zip the project (one file = fast FTP upload)
