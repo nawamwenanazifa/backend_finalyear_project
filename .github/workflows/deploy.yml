@@ -93,7 +93,15 @@ jobs:
           ENVFILE
 
       # ─────────────────────────────────────────────────────
-      # 5. Zip the project (one file = fast FTP upload)
+      # 5. Create the deploy token file (for auth)
+      #    This gets uploaded alongside the zip so the
+      #    deploy-hook.php can verify the request is legit
+      # ─────────────────────────────────────────────────────
+      - name: Create deploy token file
+        run: echo "${{ secrets.DEPLOY_TOKEN }}" > .deploy_token
+
+      # ─────────────────────────────────────────────────────
+      # 6. Zip the project (one file = fast FTP upload)
       #    Excludes: .git, node_modules, tests, dev files
       # ─────────────────────────────────────────────────────
       - name: Zip project files
@@ -114,9 +122,16 @@ jobs:
             --exclude "deploy.zip"
 
       # ─────────────────────────────────────────────────────
-      # 6. Upload the single zip file via FTP
-      #    Much faster than uploading hundreds of files
+      # 7. Upload zip + token via FTP
       # ─────────────────────────────────────────────────────
+      - name: Upload deploy token via FTP
+        run: |
+          curl --ftp-create-dirs \
+               --retry 3 \
+               -T .deploy_token \
+               "ftp://${{ secrets.FTP_SERVER }}/backend/.deploy_token" \
+               --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}"
+
       - name: Upload zip via FTP
         run: |
           curl --ftp-create-dirs \
@@ -126,41 +141,21 @@ jobs:
                --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}"
 
       # ─────────────────────────────────────────────────────
-      # 7. SSH: extract zip, preserve .env, run artisan cmds
+      # 8. Trigger the deploy hook via HTTP
+      #    This calls public/deploy-hook.php on the server
+      #    which extracts the zip and runs artisan commands
       # ─────────────────────────────────────────────────────
-      - name: Extract & setup via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.FTP_SERVER }}
-          username: fynbridals
-          password: ${{ secrets.DEPLOY_TOKEN }}
-          port: 22
-          script: |
-            set -e
-            cd /home3/fynbridals/backend
+      - name: Run deploy hook (migrate, cache, permissions)
+        run: |
+          echo "🚀 Triggering deploy hook..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            "https://admin.fynbridals.com/deploy-hook.php?token=${{ secrets.DEPLOY_TOKEN }}")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          echo "$BODY"
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Deploy hook returned HTTP $HTTP_CODE"
+            exit 1
+          fi
+          echo "✅ Deploy hook completed successfully"
 
-            echo "📦 Backing up .env if it exists..."
-            [ -f .env ] && cp .env .env.bak
-
-            echo "📂 Extracting deploy.zip..."
-            unzip -o deploy.zip
-            rm -f deploy.zip
-
-            echo "🔒 Restoring .env (keeping your configured values)..."
-            [ -f .env.bak ] && mv .env.bak .env && echo ".env restored from backup"
-
-            echo "🔑 Setting storage permissions..."
-            chmod -R 775 storage bootstrap/cache
-
-            echo "🔗 Creating storage symlink..."
-            php artisan storage:link || true
-
-            echo "🗄️  Running migrations..."
-            php artisan migrate --force || echo "⚠️  Migrations skipped — update .env DB values first"
-
-            echo "⚡ Caching config, routes, views..."
-            php artisan config:cache || true
-            php artisan route:cache  || true
-            php artisan view:cache   || true
-
-            echo "✅ Deployment complete → https://admin.fynbridals.com"
