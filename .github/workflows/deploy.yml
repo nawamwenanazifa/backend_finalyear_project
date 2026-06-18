@@ -126,6 +126,21 @@ jobs:
       #    deploy-hook.php MUST be uploaded separately first
       #    (it can't extract itself from inside the zip!)
       # ─────────────────────────────────────────────────────
+
+      # Diagnostic: list FTP root to see where we are
+      - name: List FTP root directory
+        run: |
+          echo "📂 Listing FTP root (/) ..."
+          curl -s --list-only \
+            "ftp://${{ secrets.FTP_SERVER }}/" \
+            --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" || echo "(empty or error)"
+
+          echo ""
+          echo "📂 Listing FTP /backend/ ..."
+          curl -s --list-only \
+            "ftp://${{ secrets.FTP_SERVER }}/backend/" \
+            --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" || echo "(not found or error)"
+
       - name: Upload deploy token via FTP
         run: |
           curl --ftp-create-dirs \
