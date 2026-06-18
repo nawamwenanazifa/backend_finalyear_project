@@ -147,7 +147,7 @@ jobs:
                --disable-epsv \
                --retry 3 \
                -T .deploy_token \
-               "ftp://${{ secrets.FTP_SERVER }}/backend/.deploy_token" \
+               "ftp://${{ secrets.FTP_SERVER }}/.deploy_token" \
                --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}"
 
       - name: Upload deploy-hook.php via FTP
@@ -156,7 +156,7 @@ jobs:
                --disable-epsv \
                --retry 3 \
                -T public/deploy-hook.php \
-               "ftp://${{ secrets.FTP_SERVER }}/backend/public/deploy-hook.php" \
+               "ftp://${{ secrets.FTP_SERVER }}/public/deploy-hook.php" \
                --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}"
 
       - name: Upload zip via FTP
@@ -165,7 +165,7 @@ jobs:
                --disable-epsv \
                --retry 3 \
                -T deploy.zip \
-               "ftp://${{ secrets.FTP_SERVER }}/backend/deploy.zip" \
+               "ftp://${{ secrets.FTP_SERVER }}/deploy.zip" \
                --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}"
 
       # ─────────────────────────────────────────────────────
