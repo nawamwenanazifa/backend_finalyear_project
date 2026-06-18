@@ -126,12 +126,39 @@ class AdminPanelProvider extends PanelProvider
                     }
                     
                     /* Main content background */
-                    .fi-main, main, body { 
+                    .fi-main, body { 
                         background: #FBF9F5 !important; 
                     }
                     .fi-card {
                         background: white !important;
                         border-radius: 16px !important;
+                        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+                    }
+
+                    /* Login Page Specific Styling */
+                    main.fi-simple-main {
+                        background-color: #570013 !important;
+                        background-image: radial-gradient(circle at center, #78001a 0%, #570013 100%) !important;
+                    }
+                    main.fi-simple-main .fi-card {
+                        background-color: #ffffff !important;
+                        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
+                        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+                        padding: 2rem !important;
+                    }
+                    /* Ensure text on login page labels is visible */
+                    main.fi-simple-main .fi-card label,
+                    main.fi-simple-main .fi-card h2 {
+                        color: #570013 !important;
+                        font-weight: 600 !important;
+                    }
+                    main.fi-simple-main .fi-logo {
+                        filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));
+                    }
+                    /* Form input fields on login page */
+                    main.fi-simple-main .fi-input {
+                        background-color: #f9f9f9 !important;
+                        border: 1px solid #e0e0e0 !important;
                     }
                 </style>
                 HTML
