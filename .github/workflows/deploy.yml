@@ -37,6 +37,12 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
+      - name: Ensure required directories exist
+        run: |
+          mkdir -p bootstrap/cache
+          mkdir -p storage/framework/{cache/data,sessions,views}
+          mkdir -p storage/logs
+
       - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
