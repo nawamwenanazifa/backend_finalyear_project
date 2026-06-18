@@ -26,11 +26,15 @@ class Chat extends Page
     // Show unread message count badge
     public static function getNavigationBadge(): ?string
     {
-        $unreadCount = \App\Models\Message::where('receiver_id', auth()->id())
-            ->where('is_read', false)
-            ->count();
-        
-        return $unreadCount > 0 ? $unreadCount : null;
+        try {
+            $unreadCount = \App\Models\Message::where('receiver_id', auth()->id())
+                ->where('is_read', false)
+                ->count();
+            
+            return $unreadCount > 0 ? (string) $unreadCount : null;
+        } catch (\Exception $e) {
+            return null;
+        }
     }
     
     public static function getNavigationBadgeColor(): ?string

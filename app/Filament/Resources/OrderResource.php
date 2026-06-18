@@ -279,7 +279,12 @@ class OrderResource extends Resource
     
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::where('order_status', 'pending')->count();
+        try {
+            $count = static::getModel()::where('order_status', 'pending')->count();
+            return $count > 0 ? (string) $count : null;
+        } catch (\Exception $e) {
+            return null;
+        }
     }
     
     public static function getNavigationBadgeColor(): ?string
