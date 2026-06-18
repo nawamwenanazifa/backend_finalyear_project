@@ -105,9 +105,10 @@ run('Fixing storage permissions', 'chmod -R 775 storage bootstrap/cache');
 
 // ── Step 5: Run Artisan commands ───────────────────────
 run('Creating storage symlink',  'php artisan storage:link');
+run('Clearing caches',           'php artisan optimize:clear');
+run('Caching config',            'php artisan config:cache');
 run('Running migrations',        'php artisan migrate --force');
 run('Seeding Super Admin',       'php artisan db:seed --class=SuperAdminSeeder --force');
-run('Caching config',            'php artisan config:cache');
 run('Caching routes',            'php artisan route:cache');
 run('Caching views',             'php artisan view:cache');
 
