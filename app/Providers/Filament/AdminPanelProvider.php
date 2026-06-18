@@ -153,12 +153,18 @@ class AdminPanelProvider extends PanelProvider
                     /* Ensure text on login page labels is visible */
                     main.fi-simple-main label,
                     main.fi-simple-main h2,
-                    main.fi-simple-main span,
+                    main.fi-simple-main span:not(.fi-btn-label):not(.fi-btn span):not(button span),
                     .dark main.fi-simple-main label,
                     .dark main.fi-simple-main h2,
-                    .dark main.fi-simple-main span {
+                    .dark main.fi-simple-main span:not(.fi-btn-label):not(.fi-btn span):not(button span) {
                         color: #570013 !important;
                         font-weight: 600 !important;
+                    }
+                    /* Explicitly fix button text */
+                    main.fi-simple-main button span,
+                    main.fi-simple-main .fi-btn span,
+                    main.fi-simple-main .fi-btn-label {
+                        color: #ffffff !important;
                     }
                     main.fi-simple-main .fi-logo {
                         filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));
