@@ -122,7 +122,9 @@ jobs:
             --exclude "deploy.zip"
 
       # ─────────────────────────────────────────────────────
-      # 7. Upload zip + token via FTP
+      # 7. Upload files via FTP
+      #    deploy-hook.php MUST be uploaded separately first
+      #    (it can't extract itself from inside the zip!)
       # ─────────────────────────────────────────────────────
       - name: Upload deploy token via FTP
         run: |
@@ -130,6 +132,14 @@ jobs:
                --retry 3 \
                -T .deploy_token \
                "ftp://${{ secrets.FTP_SERVER }}/backend/.deploy_token" \
+               --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}"
+
+      - name: Upload deploy-hook.php via FTP
+        run: |
+          curl --ftp-create-dirs \
+               --retry 3 \
+               -T public/deploy-hook.php \
+               "ftp://${{ secrets.FTP_SERVER }}/backend/public/deploy-hook.php" \
                --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}"
 
       - name: Upload zip via FTP
