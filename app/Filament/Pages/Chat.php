@@ -32,7 +32,7 @@ class Chat extends Page
                 ->count();
             
             return $unreadCount > 0 ? (string) $unreadCount : null;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return null;
         }
     }

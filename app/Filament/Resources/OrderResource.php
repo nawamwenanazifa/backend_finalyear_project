@@ -282,7 +282,7 @@ class OrderResource extends Resource
         try {
             $count = static::getModel()::where('order_status', 'pending')->count();
             return $count > 0 ? (string) $count : null;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return null;
         }
     }
