@@ -6,7 +6,7 @@
  * 2. Runs artisan commands (migrate, cache, etc.)
  *
  * Protected by a secret token in .deploy_token file.
- * URL: https://admin.fynbridals.com/deploy-hook.php?token=YOUR_TOKEN
+ * Called with: curl -H "X-Deploy-Token: xxx" URL
  */
 
 // ── Increase limits for deploy ─────────────────────────
@@ -14,7 +14,23 @@ set_time_limit(300);
 ini_set('memory_limit', '256M');
 
 // ── Security: verify deploy token ──────────────────────
-$expectedToken = $_GET['token'] ?? '';
+// Accept token from header OR query string
+$expectedToken = '';
+
+// Try header first
+$headers = getallheaders();
+foreach ($headers as $key => $value) {
+    if (strtolower($key) === 'x-deploy-token') {
+        $expectedToken = $value;
+        break;
+    }
+}
+
+// Fallback to query string
+if (empty($expectedToken)) {
+    $expectedToken = $_GET['token'] ?? '';
+}
+
 $tokenFile = __DIR__ . '/../.deploy_token';
 
 if (!file_exists($tokenFile)) {

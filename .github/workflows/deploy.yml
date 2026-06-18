@@ -143,19 +143,43 @@ jobs:
       # ─────────────────────────────────────────────────────
       # 8. Trigger the deploy hook via HTTP
       #    This calls public/deploy-hook.php on the server
-      #    which extracts the zip and runs artisan commands
+      #    which extracts the zip and runs artisan commands.
+      #    Token is sent via header (not URL) to avoid
+      #    issues with special characters in passwords.
       # ─────────────────────────────────────────────────────
-      - name: Run deploy hook (migrate, cache, permissions)
+      - name: Run deploy hook (extract, migrate, cache)
         run: |
           echo "🚀 Triggering deploy hook..."
-          RESPONSE=$(curl -s -w "\n%{http_code}" \
-            "https://admin.fynbridals.com/deploy-hook.php?token=${{ secrets.DEPLOY_TOKEN }}")
-          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-          BODY=$(echo "$RESPONSE" | sed '$d')
-          echo "$BODY"
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "❌ Deploy hook returned HTTP $HTTP_CODE"
-            exit 1
-          fi
-          echo "✅ Deploy hook completed successfully"
 
+          # Try HTTP first (SSL might not be set up on subdomain)
+          RESPONSE=$(curl -s --max-time 120 -w "\nHTTP_CODE:%{http_code}" \
+            -H "X-Deploy-Token: ${{ secrets.DEPLOY_TOKEN }}" \
+            "http://admin.fynbridals.com/deploy-hook.php" 2>&1) || true
+
+          HTTP_CODE=$(echo "$RESPONSE" | grep -o 'HTTP_CODE:[0-9]*' | cut -d: -f2)
+          BODY=$(echo "$RESPONSE" | sed '/HTTP_CODE:/d')
+
+          echo "$BODY"
+          echo "HTTP Status: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Deploy hook completed successfully"
+          else
+            echo "⚠️ HTTP deploy hook returned $HTTP_CODE — trying HTTPS..."
+            RESPONSE=$(curl -s --max-time 120 -w "\nHTTP_CODE:%{http_code}" \
+              -H "X-Deploy-Token: ${{ secrets.DEPLOY_TOKEN }}" \
+              "https://admin.fynbridals.com/deploy-hook.php" 2>&1) || true
+
+            HTTP_CODE=$(echo "$RESPONSE" | grep -o 'HTTP_CODE:[0-9]*' | cut -d: -f2)
+            BODY=$(echo "$RESPONSE" | sed '/HTTP_CODE:/d')
+            echo "$BODY"
+            echo "HTTP Status: $HTTP_CODE"
+
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✅ Deploy hook completed successfully (HTTPS)"
+            else
+              echo "❌ Deploy hook failed with HTTP $HTTP_CODE"
+              echo "Note: You may need to set up the subdomain first in cPanel"
+              exit 1
+            fi
+          fi
