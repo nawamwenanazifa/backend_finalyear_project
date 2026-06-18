@@ -140,15 +140,23 @@ class AdminPanelProvider extends PanelProvider
                         background-color: #570013 !important;
                         background-image: radial-gradient(circle at center, #78001a 0%, #570013 100%) !important;
                     }
-                    main.fi-simple-main .fi-card {
+                    main.fi-simple-main section,
+                    main.fi-simple-main .fi-card,
+                    .dark main.fi-simple-main section,
+                    .dark main.fi-simple-main .fi-card {
                         background-color: #ffffff !important;
                         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
                         border: 1px solid rgba(255, 255, 255, 0.2) !important;
                         padding: 2rem !important;
+                        border-radius: 16px !important;
                     }
                     /* Ensure text on login page labels is visible */
-                    main.fi-simple-main .fi-card label,
-                    main.fi-simple-main .fi-card h2 {
+                    main.fi-simple-main label,
+                    main.fi-simple-main h2,
+                    main.fi-simple-main span,
+                    .dark main.fi-simple-main label,
+                    .dark main.fi-simple-main h2,
+                    .dark main.fi-simple-main span {
                         color: #570013 !important;
                         font-weight: 600 !important;
                     }
@@ -156,9 +164,18 @@ class AdminPanelProvider extends PanelProvider
                         filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));
                     }
                     /* Form input fields on login page */
-                    main.fi-simple-main .fi-input {
+                    main.fi-simple-main input,
+                    .dark main.fi-simple-main input {
                         background-color: #f9f9f9 !important;
-                        border: 1px solid #e0e0e0 !important;
+                        border: 1px solid #cccccc !important;
+                        color: #000000 !important;
+                        -webkit-text-fill-color: #000000 !important;
+                        font-weight: 500 !important;
+                    }
+                    /* Make the eye icon and remember me checkbox visible */
+                    main.fi-simple-main svg,
+                    .dark main.fi-simple-main svg {
+                        color: #570013 !important;
                     }
                 </style>
                 HTML
