@@ -1,0 +1,126 @@
+name: Deploy Laravel Backend → admin.fynbridals.com
+
+on:
+  push:
+    branches:
+      - main  # change to 'master' if needed
+
+jobs:
+  deploy:
+    name: Zip, Upload & Extract
+    runs-on: ubuntu-latest
+
+    steps:
+      # ─────────────────────────────────────────────────────
+      # 1. Checkout code
+      # ─────────────────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ─────────────────────────────────────────────────────
+      # 2. Setup PHP 8.1
+      # ─────────────────────────────────────────────────────
+      - name: Setup PHP 8.1
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: mbstring, bcmath, pdo_mysql, xml, curl, zip
+          coverage: none
+
+      # ─────────────────────────────────────────────────────
+      # 3. Cache & install Composer (production only)
+      # ─────────────────────────────────────────────────────
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+      # ─────────────────────────────────────────────────────
+      # 4. Create a starter .env (placeholder — edit on cPanel
+      #    via File Manager after first deploy)
+      #    On subsequent deploys the server's .env is preserved.
+      # ─────────────────────────────────────────────────────
+      - name: Create starter .env from example
+        run: |
+          cp .env.example .env
+          sed -i 's/APP_ENV=local/APP_ENV=production/'           .env
+          sed -i 's/APP_DEBUG=true/APP_DEBUG=false/'             .env
+          sed -i 's|APP_URL=http://localhost|APP_URL=https://admin.fynbridals.com|' .env
+
+      # ─────────────────────────────────────────────────────
+      # 5. Zip the project (one file = fast FTP upload)
+      #    Excludes: .git, node_modules, tests, dev files
+      # ─────────────────────────────────────────────────────
+      - name: Zip project files
+        run: |
+          zip -r deploy.zip . \
+            --exclude "*.git*" \
+            --exclude "*/.git/*" \
+            --exclude "*/node_modules/*" \
+            --exclude "*/tests/*" \
+            --exclude ".editorconfig" \
+            --exclude "phpunit.xml" \
+            --exclude "package.json" \
+            --exclude "package-lock.json" \
+            --exclude "postcss.config.js" \
+            --exclude "vite.config.js" \
+            --exclude "README.md" \
+            --exclude "test-simple.ps1" \
+            --exclude "deploy.zip"
+
+      # ─────────────────────────────────────────────────────
+      # 6. Upload the single zip file via FTP
+      #    Much faster than uploading hundreds of files
+      # ─────────────────────────────────────────────────────
+      - name: Upload zip via FTP
+        run: |
+          curl --ftp-create-dirs \
+               --retry 3 \
+               -T deploy.zip \
+               "ftp://${{ secrets.FTP_SERVER }}/backend/deploy.zip" \
+               --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}"
+
+      # ─────────────────────────────────────────────────────
+      # 7. SSH: extract zip, preserve .env, run artisan cmds
+      # ─────────────────────────────────────────────────────
+      - name: Extract & setup via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.FTP_SERVER }}
+          username: fynbridals
+          password: ${{ secrets.DEPLOY_TOKEN }}
+          port: 22
+          script: |
+            set -e
+            cd /home3/fynbridals/backend
+
+            echo "📦 Backing up .env if it exists..."
+            [ -f .env ] && cp .env .env.bak
+
+            echo "📂 Extracting deploy.zip..."
+            unzip -o deploy.zip
+            rm -f deploy.zip
+
+            echo "🔒 Restoring .env (keeping your configured values)..."
+            [ -f .env.bak ] && mv .env.bak .env && echo ".env restored from backup"
+
+            echo "🔑 Setting storage permissions..."
+            chmod -R 775 storage bootstrap/cache
+
+            echo "🔗 Creating storage symlink..."
+            php artisan storage:link || true
+
+            echo "🗄️  Running migrations..."
+            php artisan migrate --force || echo "⚠️  Migrations skipped — update .env DB values first"
+
+            echo "⚡ Caching config, routes, views..."
+            php artisan config:cache || true
+            php artisan route:cache  || true
+            php artisan view:cache   || true
+
+            echo "✅ Deployment complete → https://admin.fynbridals.com"
