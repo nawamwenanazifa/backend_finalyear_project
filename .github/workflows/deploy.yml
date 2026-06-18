@@ -131,19 +131,20 @@ jobs:
       - name: List FTP root directory
         run: |
           echo "📂 Listing FTP root (/) ..."
-          curl -s --list-only \
+          curl -s --disable-epsv --list-only \
             "ftp://${{ secrets.FTP_SERVER }}/" \
             --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" || echo "(empty or error)"
 
           echo ""
           echo "📂 Listing FTP /backend/ ..."
-          curl -s --list-only \
+          curl -s --disable-epsv --list-only \
             "ftp://${{ secrets.FTP_SERVER }}/backend/" \
             --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" || echo "(not found or error)"
 
       - name: Upload deploy token via FTP
         run: |
           curl --ftp-create-dirs \
+               --disable-epsv \
                --retry 3 \
                -T .deploy_token \
                "ftp://${{ secrets.FTP_SERVER }}/backend/.deploy_token" \
@@ -152,6 +153,7 @@ jobs:
       - name: Upload deploy-hook.php via FTP
         run: |
           curl --ftp-create-dirs \
+               --disable-epsv \
                --retry 3 \
                -T public/deploy-hook.php \
                "ftp://${{ secrets.FTP_SERVER }}/backend/public/deploy-hook.php" \
@@ -160,6 +162,7 @@ jobs:
       - name: Upload zip via FTP
         run: |
           curl --ftp-create-dirs \
+               --disable-epsv \
                --retry 3 \
                -T deploy.zip \
                "ftp://${{ secrets.FTP_SERVER }}/backend/deploy.zip" \
