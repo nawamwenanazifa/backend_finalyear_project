@@ -183,8 +183,8 @@ class AdminPanelProvider extends PanelProvider
                         filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));
                     }
                     /* Form input fields on login page */
-                    main.fi-simple-main input,
-                    .dark main.fi-simple-main input {
+                    main.fi-simple-main input:not([type="checkbox"]),
+                    .dark main.fi-simple-main input:not([type="checkbox"]) {
                         background-color: #f9f9f9 !important;
                         border: 1px solid #cccccc !important;
                         color: #000000 !important;
