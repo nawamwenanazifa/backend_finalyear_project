@@ -7,23 +7,39 @@ use App\Models\User;
 use App\Models\Product;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Schema;
 
 class SalesStats extends BaseWidget
 {
     protected function getStats(): array
     {
-        $totalRevenue = Order::where('payment_status', 'paid')
-            ->sum('total');
-        
-        $totalOrders = Order::count();
-        
-        $totalCustomers = User::where('is_admin', false)->count();
-        
-        $lowStockProducts = Product::where('stock_quantity', '<=', 5)
-            ->where('stock_quantity', '>', 0)
-            ->count();
-        
-        $outOfStockProducts = Product::where('stock_quantity', 0)->count();
+        try {
+            $totalRevenue = Schema::hasTable('orders')
+                ? Order::where('payment_status', 'paid')->sum('total')
+                : 0;
+            
+            $totalOrders = Schema::hasTable('orders')
+                ? Order::count()
+                : 0;
+            
+            $totalCustomers = User::where('is_admin', false)->count();
+            
+            $lowStockProducts = Schema::hasTable('products')
+                ? Product::where('stock_quantity', '<=', 5)
+                    ->where('stock_quantity', '>', 0)
+                    ->count()
+                : 0;
+            
+            $outOfStockProducts = Schema::hasTable('products')
+                ? Product::where('stock_quantity', 0)->count()
+                : 0;
+        } catch (\Exception $e) {
+            $totalRevenue = 0;
+            $totalOrders = 0;
+            $totalCustomers = 0;
+            $lowStockProducts = 0;
+            $outOfStockProducts = 0;
+        }
 
         return [
             Stat::make('Total Revenue', 'UGX ' . number_format($totalRevenue, 0))

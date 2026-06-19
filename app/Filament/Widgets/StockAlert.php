@@ -6,6 +6,7 @@ use App\Models\Product;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
+use Illuminate\Support\Facades\Schema;
 
 class StockAlert extends BaseWidget
 {
@@ -15,16 +16,18 @@ class StockAlert extends BaseWidget
     
     public function table(Table $table): Table
     {
+        $query = Schema::hasTable('products')
+            ? Product::query()
+                ->where(function ($query) {
+                    $query->where('stock_quantity', '>', 0)
+                        ->whereColumn('stock_quantity', '<=', 'low_stock_threshold');
+                })
+                ->orWhere('stock_quantity', 0)
+                ->orderBy('stock_quantity', 'asc')
+            : Product::query()->whereRaw('1 = 0');
+
         return $table
-            ->query(
-                Product::query()
-                    ->where(function ($query) {
-                        $query->where('stock_quantity', '>', 0)
-                            ->whereColumn('stock_quantity', '<=', 'low_stock_threshold');
-                    })
-                    ->orWhere('stock_quantity', 0)
-                    ->orderBy('stock_quantity', 'asc')
-            )
+            ->query($query)
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->label('Product')
