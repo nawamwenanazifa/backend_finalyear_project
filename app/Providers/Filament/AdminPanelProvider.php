@@ -97,8 +97,13 @@ class AdminPanelProvider extends PanelProvider
                     }
                     
                     /* Force all text inside active item to be white */
-                    .fi-sidebar-item-active a *,
-                    .fi-sidebar-item-active button * {
+                    .fi-sidebar-item-active > a,
+                    .fi-sidebar-item-active > button,
+                    .fi-sidebar-item-active > a *,
+                    .fi-sidebar-item-active > button *,
+                    .fi-sidebar-item-active span,
+                    ul.fi-sidebar-nav li.fi-sidebar-item-active a span,
+                    ul.fi-sidebar-nav li.fi-sidebar-item-active a .fi-sidebar-item-label {
                         color: #ffffff !important;
                     }
                     
