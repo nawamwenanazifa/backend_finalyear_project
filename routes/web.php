@@ -517,3 +517,22 @@ Route::get('/run-migrate', function (\Illuminate\Http\Request $request) {
         return response($html, 500)->header('Content-Type', 'text/html');
     }
 });
+
+// Web-based seeder runner
+// Usage: https://admin.fynbridals.com/run-seeders?key=FynBridals2026SecretMigrate
+Route::get('/run-seeders', function (\Illuminate\Http\Request $request) {
+    if ($request->query('key') !== 'FynBridals2026SecretMigrate') {
+        abort(403, 'Invalid key.');
+    }
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+        $output = \Illuminate\Support\Facades\Artisan::output();
+
+        return response('<h2>✅ Seeding completed successfully</h2><pre>' . e($output) . '</pre>', 200)
+            ->header('Content-Type', 'text/html');
+    } catch (\Exception $e) {
+        return response('<h2>❌ Seeding failed</h2><pre>' . e($e->getMessage()) . '</pre>', 500)
+            ->header('Content-Type', 'text/html');
+    }
+});

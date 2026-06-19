@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Schema;
 class NotificationWidget extends Widget
 {
     protected static string $view = 'filament.widgets.notification-widget';
+    protected static ?int $sort = 3;
     protected int | string | array $columnSpan = 'full';
     
     public function getNotifications()
