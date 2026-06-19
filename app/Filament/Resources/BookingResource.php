@@ -17,7 +17,14 @@ class BookingResource extends Resource
 {
     protected static ?string $model = Booking::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-calendar';
+    
+    protected static ?string $navigationGroup = 'Customer Management';
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::where('status', 'pending')->count() ?: static::getModel()::count();
+    }
 
     public static function form(Form $form): Form
     {
