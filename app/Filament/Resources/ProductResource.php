@@ -81,7 +81,6 @@ class ProductResource extends Resource
                                     ->required()
                                     ->numeric()
                                     ->minValue(0)
-                                    ->step(1000)
                                     ->prefix('UGX')
                                     ->reactive()
                                     ->afterStateHydrated(function ($state, callable $set) {
