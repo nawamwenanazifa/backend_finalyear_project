@@ -89,25 +89,23 @@ class AdminPanelProvider extends PanelProvider
                         color: #570013 !important;
                     }
                     
-                    /* FORCE WHITE TEXT ON ACTIVE MENU ITEMS - MULTIPLE SELECTORS */
-                    .fi-sidebar-item-active a,
-                    .fi-sidebar-item-active button,
-                    .fi-sidebar-item-active .fi-sidebar-item-label,
-                    .fi-sidebar-item-active span,
-                    .fi-sidebar-nav .fi-sidebar-item-active,
-                    .fi-sidebar-nav .fi-sidebar-item-active .fi-sidebar-item-label,
-                    .fi-sidebar-nav .fi-sidebar-item-active span {
-                        background: #570013 !important;
-                        color: #ffffff !important;
-                        font-weight: 600 !important;
+                    /* FORCE WHITE TEXT ON ACTIVE MENU ITEMS */
+                    .fi-sidebar-item-active > a,
+                    .fi-sidebar-item-active > button {
+                        background-color: #570013 !important;
+                        border-radius: 8px !important;
                     }
                     
                     /* Force all text inside active item to be white */
-                    .fi-sidebar-item-active *,
                     .fi-sidebar-item-active a *,
-                    .fi-sidebar-item-active button *,
-                    .fi-sidebar-nav .fi-sidebar-item-active * {
+                    .fi-sidebar-item-active button * {
                         color: #ffffff !important;
+                    }
+                    
+                    /* Prevent nested spans from inheriting the background color */
+                    .fi-sidebar-item-active a span,
+                    .fi-sidebar-item-active button span {
+                        background-color: transparent !important;
                     }
                     
                     /* Force icons to be white */
