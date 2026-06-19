@@ -41,17 +41,14 @@ class CategoryResource extends Resource
                 Forms\Components\Select::make('icon')
                     ->label('Icon')
                     ->options([
-                        'woman' => '👩‍🦰 Woman',
-                        'dress' => '👗 Dress',
-                        'man' => '👨 Man',
-                        'celebration' => '🎉 Celebration',
-                        'diamond' => '💎 Diamond',
-                        'flower' => '🌸 Flower',
-                        'crown' => '👑 Crown',
-                        'star' => '⭐ Star',
-                        'heart' => '❤️ Heart',
-                        'bag' => '🛍️ Bag',
-                        'ring' => '💍 Ring',
+                        'heroicon-o-user' => 'User',
+                        'heroicon-o-sparkles' => 'Sparkles',
+                        'heroicon-o-star' => 'Star',
+                        'heroicon-o-check-badge' => 'Badge / Crown',
+                        'heroicon-o-heart' => 'Heart',
+                        'heroicon-o-shopping-bag' => 'Shopping Bag',
+                        'heroicon-o-gift' => 'Gift',
+                        'heroicon-o-tag' => 'Tag',
                     ])
                     ->searchable()
                     ->placeholder('Select an icon')
@@ -75,25 +72,8 @@ class CategoryResource extends Resource
                     ->searchable()
                     ->width(50),
                 
-                Tables\Columns\TextColumn::make('icon')
-                    ->label('Icon')
-                    ->formatStateUsing(fn ($state): string => match($state) {
-                        'woman' => '👩‍🦰',
-                        'dress' => '👗',
-                        'man' => '👨',
-                        'celebration' => '🎉',
-                        'diamond' => '💎',
-                        'flower' => '🌸',
-                        'crown' => '👑',
-                        'star' => '⭐',
-                        'heart' => '❤️',
-                        'bag' => '🛍️',
-                        'ring' => '💍',
-                        default => '📁',
-                    })
-                    ->size(30)
-                    ->width(60)
-                    ->alignCenter(),
+                Tables\Columns\IconColumn::make('icon')
+                    ->label('Icon'),
                 
                 Tables\Columns\TextColumn::make('name')
                     ->label('Name')
