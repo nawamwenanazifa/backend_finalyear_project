@@ -7,10 +7,29 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Traits\Auditable;
+use Filament\Models\Contracts\HasAvatar;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 
-class User extends Authenticatable
+class User extends Authenticatable implements HasAvatar, FilamentUser
 {
     use HasApiTokens, HasFactory, Notifiable, Auditable;
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->is_admin || $this->role === 'super_admin' || $this->role === 'admin';
+    }
+
+    public function getFilamentAvatarUrl(): ?string
+    {
+        if ($this->profile_image) {
+            return asset($this->profile_image);
+        }
+
+        // Generate initials-based avatar
+        $name = urlencode($this->name ?? 'User');
+        return "https://ui-avatars.com/api/?name={$name}&color=ffffff&background=570013&bold=true&size=128";
+    }
 
     protected $fillable = [
         'name',
@@ -114,13 +133,8 @@ class User extends Authenticatable
             return asset($this->profile_image);
         }
         
-        if ($this->gender === 'female') {
-            return '/images/default-female-avatar.png';
-        } elseif ($this->gender === 'male') {
-            return '/images/default-male-avatar.png';
-        }
-        
-        return '/images/default-avatar.png';
+        $name = urlencode($this->name ?? 'User');
+        return "https://ui-avatars.com/api/?name={$name}&color=ffffff&background=570013&bold=true&size=128";
     }
     
     public function getInitialsAttribute()
