@@ -21,7 +21,6 @@ class ProductSeeder extends Seeder
                 'price' => 450000,
                 'stock_quantity' => 15,
                 'low_stock_threshold' => 5,
-                'is_active' => true,
                 'is_featured' => true,
             ],
             [
@@ -31,7 +30,6 @@ class ProductSeeder extends Seeder
                 'price' => 1200000,
                 'stock_quantity' => 3,
                 'low_stock_threshold' => 2,
-                'is_active' => true,
                 'is_featured' => true,
             ],
             [
@@ -41,7 +39,6 @@ class ProductSeeder extends Seeder
                 'price' => 150000,
                 'stock_quantity' => 0, // Out of stock
                 'low_stock_threshold' => 10,
-                'is_active' => true,
                 'is_featured' => false,
             ],
         ];

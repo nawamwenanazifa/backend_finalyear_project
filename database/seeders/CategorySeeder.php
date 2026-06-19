@@ -20,8 +20,6 @@ class CategorySeeder extends Seeder
         ];
 
         foreach ($categories as $category) {
-            $category['slug'] = Str::slug($category['name']);
-            $category['is_active'] = true;
             Category::firstOrCreate(['name' => $category['name']], $category);
         }
     }
