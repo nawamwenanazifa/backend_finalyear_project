@@ -76,6 +76,18 @@ class AdminPanelProvider extends PanelProvider
                         overflow-y: auto !important;
                     }
                     
+                    /* Default sidebar menu items - ensure visible text */
+                    .fi-sidebar-nav a,
+                    .fi-sidebar-nav button,
+                    .fi-sidebar-nav .fi-sidebar-item-label,
+                    .fi-sidebar-nav span,
+                    .fi-sidebar-nav .fi-sidebar-group-label {
+                        color: #333333 !important;
+                    }
+                    .fi-sidebar-nav svg {
+                        color: #570013 !important;
+                    }
+                    
                     /* FORCE WHITE TEXT ON ACTIVE MENU ITEMS - MULTIPLE SELECTORS */
                     .fi-sidebar-item-active a,
                     .fi-sidebar-item-active button,
